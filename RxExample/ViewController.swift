@@ -8,6 +8,7 @@
 
 import UIKit
 import RxSwift
+import RxCocoa
 
 internal struct Employee {
     internal let name: String
@@ -55,12 +56,56 @@ class ViewController: UIViewController {
     }()
     
     private let disposeBag = DisposeBag()
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupView()
         
         // TODO: init data employe
+        let employee = Employee(name: "Arif R", age: "25", position: "iOS Developer")
+        let dataEmployee = Observable<Employee>.of(employee)
+        
+        dataEmployee
+            .map { employee -> String in
+                "Name: \(employee.name)"
+                
+        }
+        .subscribe(self.nameLabel.rx.text)
+        .disposed(by: disposeBag)
+        
+        // without RxCocoa
+        dataEmployee
+            .map { employee -> String in
+                "Age: \(employee.age)"
+        }
+        .subscribe(onNext: { age in
+            self.ageLabel.text = age
+        })
+            .disposed(by: disposeBag)
+        
+        searchTextInput.rx.text
+            .subscribe(self.positionLabel.rx.text)
+            .disposed(by: disposeBag)
+        
+        // without RxCocoa
+        //        searchTextInput.rx.text
+        //        .subscribe(onNext: { [weak self] text in
+        //            self?.positionLabel.text = text
+        //        })
+        //        .disposed(by: disposeBag)
+        
+        buttonSearch.rx.tap.subscribe(onNext: { _ in
+            print("tap action")
+        }).disposed(by: disposeBag)
+        
+        dataEmployee
+            .map { employee -> String in
+                "Age: \(employee.age)"
+        }
+        .asDriver(onErrorJustReturn: "")
+        .drive(onNext: { [weak self] age in
+            self?.ageLabel.text = age
+        }).disposed(by: disposeBag)
     }
     
     // MARK: Function setup view
@@ -87,7 +132,7 @@ class ViewController: UIViewController {
         stackView.isLayoutMarginsRelativeArrangement = true
         stackView.directionalLayoutMargins = NSDirectionalEdgeInsets(top: 20, leading: 20, bottom: 20, trailing: 20)
     }
-
-
+    
+    
 }
 
